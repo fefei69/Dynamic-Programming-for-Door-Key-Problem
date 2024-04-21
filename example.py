@@ -1,5 +1,6 @@
 from utils import *
-
+import cv2
+import time
 MF = 0  # Move Forward
 TL = 1  # Turn Left
 TR = 2  # Turn Right
@@ -16,9 +17,9 @@ def example_use_of_gym_env():
 
     print("<========== Example Usages ===========> ")
     env_path = "./starter_code/envs/example-8x8.env"
-    env, info = load_env(env_path) # load an environment
+    # env, info = load_env(env_path) # load an environment
 
-    # env, info = load_env("starter_code/envs/known_envs/doorkey-8x8-direct.env")
+    env, info = load_env("starter_code/envs/known_envs/doorkey-6x6-shortcut.env")
     print("<Environment Info>\n")
     print(info)  # Map size
     # agent initial position & direction,
@@ -48,21 +49,20 @@ def example_use_of_gym_env():
     # Determine whether agent is carrying a key
     is_carrying = env.get_wrapper_attr('carrying') is not None
 
-    # Take actions
-    cost, done = step(env, MF)  # MF=0, TL=1, TR=2, PK=3, UD=4
-    print("Moving Forward Costs: {}".format(cost))
-    cost, done = step(env, TL)  # MF=0, TL=1, TR=2, PK=3, UD=4
-    print("Turning Left Costs: {}".format(cost))
-    cost, done = step(env, TR)  # MF=0, TL=1, TR=2, PK=3, UD=4
-    print("Turning Right Costs: {}".format(cost))
-    cost, done = step(env, PK)  # MF=0, TL=1, TR=2, PK=3, UD=4
-    print("Picking Up Key Costs: {}".format(cost))
-    cost, done = step(env, UD)  # MF=0, TL=1, TR=2, PK=3, UD=4
-    print("Unlocking Door Costs: {}".format(cost))
-    plot_env(env)
+    policy = [MF, PK, TL, TL, MF, UD, MF, MF]
+
+    for action in policy:
+        cost, done = step(env, action)
+        print("Action: {}, Cost: {}".format(action, cost))
+        cv2.imshow("Env", env.render())
+        time.sleep(0.5) 
+        if cv2.waitKey(1) & 0xFF == ord('q'): 
+            break
+
     # Determine whether we stepped into the goal
     if done:
         print("Reached Goal")
+        # print("Total Cost: {}".format(total)))
 
     # The number of steps so far
     print("Step Count: {}".format(env.get_wrapper_attr('step_count')))

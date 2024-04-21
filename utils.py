@@ -18,7 +18,7 @@ def step_cost(action):
     # You should implement the stage cost by yourself
     # Feel free to use it or not
     # ************************************************
-    return 0  # the cost of action
+    return 5  # the cost of action
 
 
 def step(env, action):
