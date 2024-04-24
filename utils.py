@@ -163,6 +163,28 @@ def draw_gif_from_seq(seq, env, path="./gif/doorkey.gif"):
             step(env, act)
             writer.append_data(img)
     print(f"GIF is written to {path}")
-    return
-    
+    return None
+
+def visualize_policy(env, policy):
+    import cv2
+    import time
+    for action in policy:
+        cost, done = step(env, action)
+        print("Action: {}, Cost: {}".format(action, cost))
+        # print(env.render().shape)
+        cv2.imshow("Env", cv2.resize(env.render(), (192*2, 192*2)))
+        time.sleep(0.5) 
+        if cv2.waitKey(1) & 0xFF == ord('q'): 
+            break
+def get_available_cells(env):
+    """
+    Get the available cells in the environment
+
+    """
+    available_cells = []
+    for i in range(env.unwrapped.height):
+        for j in range(env.unwrapped.width):
+            if env.unwrapped.grid.get(j, i) is None:
+                available_cells.append((j, i))
+    return available_cells
     

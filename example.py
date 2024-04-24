@@ -19,7 +19,7 @@ def example_use_of_gym_env():
     env_path = "./starter_code/envs/example-8x8.env"
     # env, info = load_env(env_path) # load an environment
 
-    env, info = load_env("starter_code/envs/known_envs/doorkey-6x6-shortcut.env")
+    env, info = load_env("starter_code/envs/known_envs/doorkey-5x5-normal.env")
     print("<Environment Info>\n")
     print(info)  # Map size
     # agent initial position & direction,
@@ -34,7 +34,7 @@ def example_use_of_gym_env():
 
     # Get the agent direction
     agent_dir = env.get_wrapper_attr('dir_vec')  # or env.agent_dir 
-
+    print("Agent Position: {}, Agent Direction: {}".format(agent_pos, agent_dir))
     # Get the cell in front of the agent
     front_cell = env.get_wrapper_attr('front_pos')  # == agent_pos + agent_dir 
 
