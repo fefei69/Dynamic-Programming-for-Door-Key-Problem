@@ -19,7 +19,7 @@ def example_use_of_gym_env():
     env_path = "./starter_code/envs/example-8x8.env"
     # env, info = load_env(env_path) # load an environment
 
-    env, info = load_env("starter_code/envs/known_envs/doorkey-5x5-normal.env")
+    env, info = load_env("starter_code/envs/known_envs/doorkey-6x6-shortcut.env")
     print("<Environment Info>\n")
     print(info)  # Map size
     # agent initial position & direction,

@@ -19,10 +19,10 @@ LEFT = 2
 UP = 3
 
 known_map_configs = {
-    "doorkey-5x5-normal": {
+    "doorkey-5x5-test": {
         "size": 5,
         "agent_init_direction": DOWN,
-        "layout": np.array([[KEY, WALL, FLOOR], [AGENT, DOOR, FLOOR], [FLOOR, WALL, GOAL]]),
+        "layout": np.array([[FLOOR, FLOOR, FLOOR], [AGENT, FLOOR, FLOOR], [FLOOR, FLOOR, GOAL]]),
     },
     "doorkey-6x6-direct": {
         "size": 6,
@@ -196,5 +196,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    create_known_envs('doorkey-5x5-test')
+    # main()
 
