@@ -136,6 +136,16 @@ def get_door_status(door1_status, door2_status):
     elif door1_status == True and door2_status == False:
         return 3
 
+def check_unlock_door(door, door_infront_pos):
+    # check if the agent can unlock the door in front of it 
+    if door == 0:
+        return True
+    elif door == 2 and door_infront_pos == door_node[0]:
+        return True
+    elif door == 3 and door_infront_pos == door_node[1]:
+        return True
+    return False
+
 def motion_model(agent_dir, agent_pos, a, key, door, door_status_infront=None, key_status=False):
     if a == 'forward':
         new_agent_pos = (agent_pos[0] + agent_dir[0], agent_pos[1] + agent_dir[1]) 
@@ -211,13 +221,16 @@ VALUE = np.ones((height, width, 4, 3, 3, 4, 2))*np.inf
 POLICY = np.zeros((height, width, 4, 3, 3, 4, 2),dtype=str)
 # initialize the value of goal state to 0
 for gl in goal_node:
-    VALUE[gl[0], gl[1], :, :, :, 1:, :] = 0
+    VALUE[gl[0], gl[1], :, :, :, :, :] = 0
 '''
 states: pos_x, pos_y, headings id (0 ~ 3), goal position index (0 ~ 2) , key position index (0 ~ 2), door status of two doors (0 ~ 3), key_status (0 or 1)
 '''
 def main():
     for _ in tqdm(range(horizon)):
-        # OLDVALUE = VALUE
+        OLDVALUE = VALUE.copy()
+        # initialize the value of goal state to 0 at each time step
+        for gl in goal_node:
+            VALUE[gl[0], gl[1], :, :, :, :, :] = 0
         for i in range(height):
             for j in range(width):
                 for heading in headings.keys():
@@ -239,11 +252,13 @@ def main():
                                                                                                 door_status[door_stats], 
                                                                                                 door_status_infront=check_door(current_dir, current_pos),
                                                                                                 key_status=check_key(current_dir, current_pos, key_pos))
-                                        # TODO: change key and door status
+                                        # skip if the agent cannot unlock the door in front of it
+                                        if check_door(current_dir, current_pos)[0] == True and check_unlock_door(door_status[door_stats], check_door(current_dir, current_pos)[1]) == False and u_key == 'unlock_door':
+                                            continue
+                                        # change key and door status
                                         if new_agent_pos not in available_cells:
                                             continue
                                         # Can't move forward if there is a locked door
-                                        # TODO Write a function to check if the door is locked
                                         if check_door_collision(new_agent_pos, door) == True:
                                             continue
                                         # print('new_agent_pos', new_agent_pos)
@@ -259,12 +274,12 @@ def main():
                                         if Q < VALUE[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] and Q != np.inf:
                                             VALUE[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] = Q
                                             POLICY[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] = actions[u_key]
-                                            if np.all(POLICY[start_node[0], start_node[1], headings_to_index[f'{(start_dir[0], start_dir[1])}'], :, :, :, 0] != ''):
-                                                print("Policy found")
-                                                return POLICY, VALUE
-        # if np.all(VALUE == OLDVALUE):
-        #     print("Value function equals")
-        #     return POLICY, VALUE
+                                            # if np.all(POLICY[start_node[0], start_node[1], headings_to_index[f'{(start_dir[0], start_dir[1])}'], :, :, :, 0] != ''):
+                                            #     print("Policy found")
+                                            #     return POLICY, VALUE
+        if np.all(VALUE == OLDVALUE):
+            print("Value function equals")
+            return POLICY, VALUE
     return print("Policy not found")
 
 if __name__ == "__main__":
@@ -273,7 +288,7 @@ if __name__ == "__main__":
     # Visualize the policy
     # TODO: Find the policy for specific goal state and door status at start node 
     # Run the policy for 36 random environments
-    for i in range(1,37):
+    for i in range(1, 36):
         fail = False
         new_agent_pos = start_node
         new_agent_dir = (start_dir[0], start_dir[1])
@@ -301,6 +316,9 @@ if __name__ == "__main__":
                 print('Policy not found')
                 done = True
                 fail = True
+                visualize_policy(env_path, optimal_path, sleep=0.1)
+                # action = 1
+                # import pdb; pdb.set_trace()
                 continue
             optimal_path.append(int(action))
             print('Action:', action)
@@ -313,6 +331,8 @@ if __name__ == "__main__":
             cost, done = step(env, int(action))
             # plot_env(env)
         # print('Optimal path:', optimal_path)
+        # visualize_policy(env_path, optimal_path, sleep=1)
+        # import pdb; pdb.set_trace()
         if fail == False:
             # visualize_policy(env_path, optimal_path, sleep=1)
             draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partB", f"{unknown_envs[:-4]}.gif"))

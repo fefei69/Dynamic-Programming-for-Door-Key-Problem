@@ -145,7 +145,7 @@ def plot_env(env):
     plt.show()
 
 
-def draw_gif_from_seq(seq, env, path="./gif/doorkey.gif"):
+def draw_gif_from_seq(seq, env_path, path="./gif/doorkey.gif"):
     """
     Save gif with a given action sequence
     ----------------------------------------
@@ -155,25 +155,27 @@ def draw_gif_from_seq(seq, env, path="./gif/doorkey.gif"):
     env:
         The doorkey environment
     """
+    env, info = load_env(env_path)
     with imageio.get_writer(path, mode="I", duration=0.8) as writer:
         img = env.render()
         writer.append_data(img)
         for act in seq:
-            img = env.render()
             step(env, act)
+            img = env.render()
             writer.append_data(img)
     print(f"GIF is written to {path}")
     return None
 
-def visualize_policy(env, policy):
+def visualize_policy(env_path, policy, sleep=0.5):
     import cv2
     import time
+    env, info = load_env(env_path)
     for action in policy:
-        cost, done = step(env, action)
-        print("Action: {}, Cost: {}".format(action, cost))
+        cost, _ = step(env, action)
+        print("Action: {}, Total Cost: {}".format(action, cost))
         # print(env.render().shape)
         cv2.imshow("Env", cv2.resize(env.render(), (192*2, 192*2)))
-        time.sleep(0.5) 
+        time.sleep(sleep) 
         if cv2.waitKey(1) & 0xFF == ord('q'): 
             break
 def get_available_cells(env):
@@ -188,3 +190,11 @@ def get_available_cells(env):
                 available_cells.append((j, i))
     return available_cells
     
+def get_available_cells_partB():
+    wall_cells = [(4,0),(4,1),(4,3),(4,4),(4,6),(4,7)]
+    available_cells = []
+    for i in range(8):
+        for j in range(8):
+            if (i,j) not in wall_cells:
+                available_cells.append((i,j))
+    return available_cells

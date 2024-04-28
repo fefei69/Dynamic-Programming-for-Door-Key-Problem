@@ -40,7 +40,7 @@ def example_use_of_gym_env():
 
     # Access the cell at coord: (2,3)
     cell = env.get_wrapper_attr('grid').get(2, 3)  # NoneType, Wall, Key, Goal
-
+    import pdb; pdb.set_trace()
     # Get the door status
     door = env.get_wrapper_attr('grid').get(info["door_pos"][0], info["door_pos"][1])
     is_open = door.is_open

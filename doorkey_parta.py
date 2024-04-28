@@ -8,15 +8,16 @@ TL = 1  # Turn Left
 TR = 2  # Turn Right
 PK = 3  # Pickup Key
 UD = 4  # Unlock Door
-known_envs = ["starter_code/envs/known_envs/doorkey-5x5-normal.env",
-              "starter_code/envs/known_envs/doorkey-6x6-direct.env",
-              "starter_code/envs/known_envs/doorkey-5x5-normal.env",
-              "starter_code/envs/known_envs/doorkey-6x6-normal.env",
-              "starter_code/envs/known_envs/doorkey-6x6-shortcut.env",
-              "starter_code/envs/known_envs/doorkey-8x8-normal.env",
-              "starter_code/envs/known_envs/doorkey-8x8-shortcut.env"]
+known_envs = ["doorkey-5x5-normal.env",
+              "doorkey-6x6-direct.env",
+              "doorkey-6x6-normal.env",
+              "doorkey-6x6-shortcut.env",
+              "doorkey-8x8-normal.env",
+              "doorkey-8x8-shortcut.env",
+              "doorkey-8x8-direct.env"]
 
-env_path = known_envs[0]
+known_envs = known_envs[6]
+env_path = os.path.join("starter_code/envs/known_envs/", known_envs)
 env, info = load_env(env_path)
 # plot_env(env)
 height, width = info['height'], info['width']
@@ -163,7 +164,8 @@ states: (pos_x, pos_y, headings id (0~4), door status (0 or 1), key_status (0 or
 def main():
     # OLDVALUE = np.ones((5,5,4))*np.inf
     for _ in range(horizon):
-        # OLDVALUE = VALUE
+        OLDVALUE = VALUE.copy()
+        VALUE[goal_node[0], goal_node[1], :,:,:] = 0
         for i in range(height):
             for j in range(width):
                 for heading in headings.keys():
@@ -195,41 +197,38 @@ def main():
                                 if Q < VALUE[i, j, headings_to_index[f'{headings[heading]}'], key_status[key_stats], door_status[door_stats]] and Q != np.inf:
                                     VALUE[i, j, headings_to_index[f'{headings[heading]}'], key_status[key_stats], door_status[door_stats]] = Q
                                     POLICY[i, j, headings_to_index[f'{headings[heading]}'], key_status[key_stats], door_status[door_stats]] = actions[u_key]
-                                    if POLICY[start_node[0], start_node[1], headings_to_index[f'{(start_dir[0], start_dir[1])}'],0,0] != '':
-                                        print("Policy found")
-                                        return POLICY, VALUE
-        # if np.all(VALUE == OLDVALUE):
-        #     print("Value function equals")
-        #     return POLICY, VALUE
+                                    # if POLICY[start_node[0], start_node[1], headings_to_index[f'{(start_dir[0], start_dir[1])}'],0,0] != '':
+                                    #     import pdb; pdb.set_trace()
+                                    #     print("Policy found")
+                                    #     return POLICY, VALUE
+        if np.all(VALUE == OLDVALUE):
+            print("Value function equals")
+            return POLICY, VALUE
     return print("Policy not found")
 
-
-optimal_policy, optimal_value = main()
-# print(POLICY[start_node[0], start_node[1], headings_to_index[f'{(start_dir[0], start_dir[1])}']])
-# print(np.where(POLICY !=''))
-# print(POLICY[np.where(POLICY !='')])
-# plot_env(env)
-# import pdb; pdb.set_trace()
-
-# Visualize the policy
-new_agent_pos = start_node
-new_agent_dir = (start_dir[0], start_dir[1])
-done = False
-key = 0
-door = 0
-optimal_path = []
-while done != True:
-    action = POLICY[new_agent_pos[0], new_agent_pos[1], headings_to_index[f'{(new_agent_dir[0], new_agent_dir[1])}'], key, door]
-    optimal_path.append(int(action))
-    print('Action:', action)
-    new_agent_pos, new_agent_dir, key, door = motion_model(new_agent_dir,
-                                                            new_agent_pos, 
-                                                            inverse_actions[int(action)],
-                                                            key,
-                                                            door, 
-                                                            key_status=check_key(new_agent_dir, new_agent_pos), 
-                                                            door_status=check_door(new_agent_dir, new_agent_pos))
-    cost, done = step(env, int(action))
-    # plot_env(env)
-
-visualize_policy(env_path, optimal_path, sleep=1)
+if __name__ == "__main__":
+    # TODO: Loop over all known environments, check check how to utilize the value function as terminal condition
+    optimal_policy, optimal_value = main()
+    # Visualize the policy
+    new_agent_pos = start_node
+    new_agent_dir = (start_dir[0], start_dir[1])
+    done = False
+    key = 0
+    door = 0
+    optimal_path = []
+    while done != True:
+        action = POLICY[new_agent_pos[0], new_agent_pos[1], headings_to_index[f'{(new_agent_dir[0], new_agent_dir[1])}'], key, door]
+        optimal_path.append(int(action))
+        print('Action:', action)
+        new_agent_pos, new_agent_dir, key, door = motion_model(new_agent_dir,
+                                                                new_agent_pos, 
+                                                                inverse_actions[int(action)],
+                                                                key,
+                                                                door, 
+                                                                key_status=check_key(new_agent_dir, new_agent_pos), 
+                                                                door_status=check_door(new_agent_dir, new_agent_pos))
+        cost, done = step(env, int(action))
+        # plot_env(env)
+    print('Optimal path:', optimal_path)
+    visualize_policy(env_path, optimal_path, sleep=1)
+    # draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partA", f"{known_envs[:-4]}.gif"))

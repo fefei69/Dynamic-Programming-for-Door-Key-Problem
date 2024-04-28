@@ -1,131 +1,125 @@
-import numpy as np
+# Works well for grids version with only translations no headings
+from utils import *
+import cv2
+import time
 
-class Map:
-    def __init__(self, start, goal, xlim, ylim):
-        self.start = start
-        self.goal = goal
-        self.xlim = xlim
-        self.ylim = ylim
-    def __str__(self) -> str:
-        return "Start: " + str(self.start) + ", Goal: " + str(self.goal) + ", Xlim: " + str(self.xlim) + ", Ylim: " + str(self.ylim)
 class Node:
-    def __init__(self, x, y, cost, parent_index):
+    def __init__(self, x, y, direction, cost, parent_index):
         self.x = x  # index of grid
         self.y = y  # index of grid
         self.cost = cost
+        self.direction = direction
         self.parent_index = parent_index  # index of previous Node
 
     def __str__(self):
         return str(self.x) + "," + str(self.y) + "," + str(
             self.cost) + "," + str(self.parent_index)
-#check out of bounds
-def check_bounds(node):
-    if node.x < 0 or node.x > 1:
-        return False
-    if node.y < 0 or node.y > 1:
-        return False
-    return True
-
-def cal_index(node):
-    return node.x*2+node.y # starting from 0
-
-def get_optimal_poliy(optimal_states):
-    optimal_policy = []
-    for i in range(len(optimal_states)-1):
-        diff = optimal_states[i+1] - optimal_states[i]
-        # grab actions
-        for key, value in actions.items():
-            if np.allclose(value, diff):
-                optimal_policy.append(key)
-    return optimal_policy
-
-def get_optimal_path(goal_node, closed_set):
-    optimal_states = [np.array([goal_node.x, goal_node.y])]
-    parent_index = goal_node.parent_index   
-    while parent_index != -1:
-        n = closed_set[parent_index]
-        optimal_states.append(np.array([n.x, n.y]))
-        parent_index = n.parent_index
-    return optimal_states
-
-# starting state
-start = np.array([0,0])
-# goal state
-goal = np.array([1,1])
-# states space 
-states = np.array([[0,0],[0,1],[1,0],[1,1]])
-controls = np.array([[0,1],[1,0],[-1,0],[0,-1]])
-
-states = {str(states[i]):i for i in range(len(states))}
-print(states)
-actions = {'d':controls[0],'r':controls[1],'l':controls[2],'u':controls[3]}
-inv_actions = {str(controls[0]):'d',str(controls[1]):'r',str(controls[2]):'l',str(controls[3]):'u'}
-cost = np.array([1,1,1,1])
 
 
-# Dynamic Programming
-def DP(new_states, horizon):
-    count = 0
-    for t in range(horizon):
-        for i, new_state in enumerate(new_states):
-            # Terminate when horizon is reached
-            if t == 7:
-                return POLICY
-            cost = np.array([1,1,1,1])
+MF = 0  # Move Forward
+TL = 1  # Turn Left
+TR = 2  # Turn Right
+PK = 3  # Pickup Key
+UD = 4  # Unlock Door
 
-            # Terminate early when goal is reached
-            if np.allclose(new_state, start):
-                print("reach the goal!")
-                return POLICY 
-            
-            # Set current parent state as goal
-            goal = new_state
-            # Get adjacent states
-            new_states = goal + controls
-            # Penalize the new state that go back to the last state
-            if count > 0:
-                goback_ind = np.where((controls==actions[POLICY[count-1][i]]).all(axis=1))
-                cost[goback_ind] += 1000
+# plot_env(env)
+height, width = 3,3#info['height'], info['width']
+start_node = (0,0)#info['init_agent_pos']
+goal_node = (1,2)#info['goal_pos']
+# key_node = info['key_pos']
+# door_node = info['door_pos']
+# available_cells = get_available_cells(env)
+# TODO: add key 
+# available_cells.append((goal_node[0],goal_node[1]))
+available_cells = [(0,0),(0,1),(1,0),(1,1),(2,0),(2,1),(0,2),(1,2),(2,2)]
+# info[]
 
-            # check out of bounds states
-            mask = (new_states > 1) | (new_states < 0)
+headings = {
+    'L': (-1, 0),
+    'R': (1, 0),
+    'U': (0, -1),
+    'D': (0, 1)
+}
 
-            # set cost of start state to 0
-            if np.where((new_states==start).all(axis=1)):
-                cost[np.where((new_states==start).all(axis=1))] = 0
+headings_to_index = {
+    '(-1, 0)': 0,
+    '(1, 0)' : 1,
+    '(0, -1)': 2,
+    '(0, 1)' : 3
+}
 
-            idx = np.where(mask == True)[0]
-            # Add large cost to invalid states
-            cost[idx] += 1000
-            min_cost = np.min(cost)
-            low_cost_states = np.where(cost == min_cost)
-            # randomly choose one state if there are multiple states with the same cost
-            # low_cost_states = low_cost_states[0]
-            new_states = new_states[low_cost_states]
-            print("policy: ", controls[low_cost_states[0]])
-            print("new states: ", new_states)
-            if t == 0:
-                for k, ind in enumerate(low_cost_states[0]):
-                    s_id = states[f'{new_state}']
-                    POLICY[t][s_id] = inv_actions[f'{controls[ind]}']
-                if COST[t][s_id] == np.inf:
-                    COST[t][s_id] = 0
-                COST[t][s_id] += 1
-            else:
-                for _, ind in enumerate(low_cost_states[0]):
-                    # global_cost[i] += cost[ind]
-                    s_id = states[f'{new_state}']
-                    POLICY[t][s_id] = inv_actions[f'{controls[ind]}']
-                if COST[t][s_id] == np.inf:
-                    COST[t][s_id] = 0
-                COST[t][s_id] += 1
-    return print("no solution!")
+door_status = {
+    'locked': 0,
+    'unlocked': 1
+}
+
+key_status = {
+    'not_picked': 0,
+    'picked': 1
+}
+
+actions = {
+    'l': 1,
+    'r': 2,
+    'u': 3,
+    'd': 4
+}
 
 
-POLICY = np.zeros((3,4),dtype=str)
-COST = np.ones((3,4))*np.inf
-horizon = 3
-p, c = DP([goal], horizon)
-# print("Cost: ", costs)
-print("Policy: ", p)
-import pdb; pdb.set_trace()
+
+def motion_model(agent_pos, a):
+    if a == 'u':
+        new_agent_pos = (agent_pos[0] , agent_pos[1] + 1) 
+    elif a == 'l':
+        new_agent_pos = (agent_pos[0] - 1, agent_pos[1]) 
+    elif a == 'r':
+        new_agent_pos = (agent_pos[0] + 1, agent_pos[1])
+    elif a == 'd':
+        new_agent_pos = (agent_pos[0] , agent_pos[1] - 1)
+    return new_agent_pos
+
+# 5x5x4 = 100 states
+horizon = height*width - 1
+VALUE = np.ones((height,width))*np.inf
+POLICY = np.zeros((height,width),dtype=str)
+# initialize the value of goal state to 0
+VALUE[goal_node[0], goal_node[1]] = 0
+# generate all possible states
+def main():
+    for _ in range(horizon):
+        OLDVALUE = VALUE
+        for i in range(height):
+            for j in range(width):
+                # controls
+                for u_key in actions.keys():
+                    new_agent_pos = motion_model((i, j), u_key)
+                    if new_agent_pos not in available_cells:
+                        continue
+                    print('new_agent_pos', new_agent_pos)
+                    if (new_agent_pos[0], new_agent_pos[1]) == start_node :
+                        print('start node found', new_agent_pos)
+                        l = 0
+                    else:
+                        l = 1
+                    Q = VALUE[new_agent_pos[0], new_agent_pos[1]] + l
+                    
+                    if Q < VALUE[i, j] and Q != np.inf:
+                        print('Q', Q)
+                        VALUE[i, j] = Q
+                        POLICY[i, j] = u_key
+                        if POLICY[start_node[0], start_node[1]] != '':
+                            print("Policy found")
+                            return POLICY, VALUE
+        if np.all(VALUE == OLDVALUE):
+            print("Value function equals")
+            import pdb; pdb.set_trace()
+            return POLICY, VALUE
+        # OLDVALUE = VALUE 
+    return print("Policy not found")
+optimal_policy, optimal_value = main()
+print(np.where(POLICY !=''))
+print(POLICY[np.where(POLICY !='')])
+newagent = start_node
+while POLICY[newagent[0], newagent[1]] != '':
+    newagent = motion_model((newagent[0], newagent[1]),POLICY[newagent[0], newagent[1]])
+    print(newagent)
