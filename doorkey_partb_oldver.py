@@ -9,6 +9,11 @@ TR = 2  # Turn Right
 PK = 3  # Pickup Key
 UD = 4  # Unlock Door
 
+
+unknown_envs = "DoorKey-8x8-1.env"
+env_path = os.path.join("starter_code/envs/random_envs/", unknown_envs)
+env, info = load_env(env_path)
+# plot_env(env)
 height, width = 8, 8
 start_node = (3,5)
 start_dir = (0,-1) # facing up
@@ -18,6 +23,13 @@ door_node = [(4,2),(4,5)] # 2 possible door positions
 wall_cells = [(4,0),(4,1),(4,3),(4,4),(4,6),(4,7)]
 available_cells = get_available_cells_partB()
 
+
+# key_pos = info['key_pos']
+# goal_pos = info['goal_pos']
+# door1 = env.get_wrapper_attr('grid').get(4, 2)
+# door2 = env.get_wrapper_attr('grid').get(4, 5)
+# door_1_status = door1.is_open
+# door_2_status = door2.is_open
 headings = {
     'L': (-1, 0),
     'R': (1, 0),
@@ -186,25 +198,37 @@ def motion_model(agent_dir, agent_pos, a, key, door, door_status_infront=None, k
         
     return new_agent_pos, new_agent_dir, key, door
 
+# Test motion model
+# new_agent_pos = start_node
+# new_agent_dir = (start_dir[0], start_dir[1])
+# for u_key in actions.keys():
+#     cost, done = step(env, actions[u_key])
+#     new_agent_pos, new_agent_dir = motion_model(new_agent_dir, new_agent_pos, u_key)
+#     print(new_agent_pos, new_agent_dir)
+#     plot_env(env)
+# import pdb; pdb.set_trace()
+
 # 36864 states
+horizon = height*width*4*len(goal_node)*len(key_node)*4*2 - 1 
+VALUE = np.ones((height, width, 4, 3, 3, 4, 2))*np.inf
+POLICY = np.zeros((height, width, 4, 3, 3, 4, 2),dtype=str)
+# initialize the value of goal state to 0
+for gl in goal_node:
+    VALUE[gl[0], gl[1], :, :, :, :, :] = 0
 '''
 states: pos_x, pos_y, headings id (0 ~ 3), goal position index (0 ~ 2) , key position index (0 ~ 2), door status of two doors (0 ~ 3), key_status (0 or 1)
 '''
 def main():
-    horizon = height*width*4*len(goal_node)*len(key_node)*4*2 - 1 
-    VALUE_T1 = np.ones((height, width, 4, 3, 3, 4, 2))*np.inf
-    VALUE_T = VALUE_T1.copy()
-    POLICY = np.zeros((height, width, 4, 3, 3, 4, 2),dtype=str)
     for _ in tqdm(range(horizon)):
+        OLDVALUE = VALUE.copy()
         # initialize the value of goal state to 0 at each time step
-        for g_ind, gl in enumerate(goal_node):
-            VALUE_T1[gl[0], gl[1], :, g_ind, :, :, :] = 0
-            VALUE_T[gl[0], gl[1], :, g_ind, :, :, :] = 0
+        for gl in goal_node:
+            VALUE[gl[0], gl[1], :, :, :, :, :] = 0
         for i in range(height):
             for j in range(width):
                 for heading in headings.keys():
-                    for key_pos in key_node:
-                        for goal_pos in goal_node:
+                    for goal_pos in goal_node:
+                        for key_pos in key_node:
                             for door_stats in door_status.keys():
                                 for key_stats in key_status.keys():
                                     # current_state = (i, j, headings_to_index[f'{headings[heading]}'], key_pos, door_status[door_stats], key_status[key_stats])
@@ -214,7 +238,7 @@ def main():
                                     # current_key = key_pos
                                     # controls
                                     for u_key in actions.keys():
-                                        new_agent_pos, new_agent_dir, key, door = motion_model(current_dir,
+                                        new_agent_pos, new_agent_dir, key, door = motion_model((headings[heading][0], headings[heading][1]),
                                                                                                 (i, j), 
                                                                                                 u_key,
                                                                                                 key_status[key_stats],
@@ -222,36 +246,37 @@ def main():
                                                                                                 door_status_infront=check_door(current_dir, current_pos),
                                                                                                 key_status=check_key(current_dir, current_pos, key_pos))
                                         # skip if the agent cannot unlock the door in front of it
-                                        if check_door(current_dir, current_pos)[0] == True and check_unlock_door(door_status[door_stats], check_door(current_dir, current_pos)[1]) == False and u_key == 'unlock_door':
-                                            continue
+                                        # if check_door(current_dir, current_pos)[0] == True and check_unlock_door(door_status[door_stats], check_door(current_dir, current_pos)[1]) == False and u_key == 'unlock_door':
+                                        #     continue
                                         # change key and door status
                                         if new_agent_pos not in available_cells:
                                             continue
                                         # Can't move forward if there is a locked door
                                         if check_door_collision(new_agent_pos, door) == True:
                                             continue
+                                        # print('new_agent_pos', new_agent_pos)
+                                        # print('new_agent_dir', new_agent_dir)
                                         l = stage_cost(new_agent_dir, new_agent_pos)
-                                        Q = VALUE_T1[new_agent_pos[0], new_agent_pos[1], 
-                                                     headings_to_index[f'{new_agent_dir}'], 
-                                                     goal_possible_positions[goal_pos], 
-                                                     key_possible_positions[key_pos], 
-                                                     door, 
-                                                     key] + l
-
+                                        Q = VALUE[new_agent_pos[0], new_agent_pos[1], 
+                                                    headings_to_index[f'{new_agent_dir}'], 
+                                                    goal_possible_positions[goal_pos],
+                                                    key_possible_positions[key_pos], 
+                                                    door, 
+                                                    key] + l
                                         
-                                        if Q < VALUE_T1[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]]:
-                                            VALUE_T[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] = Q
+                                        if Q < VALUE[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] and Q != np.inf:
+                                            VALUE[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] = Q
                                             POLICY[i, j, headings_to_index[f'{headings[heading]}'], goal_possible_positions[goal_pos], key_possible_positions[key_pos], door_status[door_stats], key_status[key_stats]] = actions[u_key]
-                                            
-        if np.all(VALUE_T == VALUE_T1):
+                                            # if np.all(POLICY[start_node[0], start_node[1], headings_to_index[f'{(start_dir[0], start_dir[1])}'], :, :, :, 0] != ''):
+                                            #     print("Policy found")
+                                            #     return POLICY, VALUE
+        if np.all(VALUE == OLDVALUE):
             print("Value function equals")
-            import pdb; pdb.set_trace()
-            return POLICY, VALUE_T
-        VALUE_T1 = VALUE_T.copy()
-    return POLICY, VALUE_T
+            return POLICY, VALUE
+    return POLICY, VALUE
 
 if __name__ == "__main__":
-    POLICY, optimal_value = main()
+    optimal_policy, optimal_value = main()
 
     # Visualize the policy
     # TODO: Find the policy for specific goal state and door status at start node 
@@ -266,10 +291,9 @@ if __name__ == "__main__":
         # plot_env(env)
         door1, door2 = env.get_wrapper_attr('grid').get(4, 2), env.get_wrapper_attr('grid').get(4, 5)
         door_1_open, door_2_open = door1.is_open, door2.is_open
-
+        
         key_pos = (info['key_pos'][0], info['key_pos'][1])
         goal_pos = (info['goal_pos'][0], info['goal_pos'][1])
-
         door = get_door_status(door_1_open, door_2_open)
         done = False
         key = 0
@@ -281,16 +305,27 @@ if __name__ == "__main__":
                             key_possible_positions[key_pos], 
                             door, 
                             key]
+            if action == '':
+                print('Policy not found')
+                done = True
+                fail = True
+                visualize_policy(env_path, optimal_path, sleep=0.1)
+                # action = 1
+                # import pdb; pdb.set_trace()
+                continue
             optimal_path.append(int(action))
+            print('Action:', action)
             new_agent_pos, new_agent_dir, key, door = motion_model(new_agent_dir, new_agent_pos, 
                                                                     inverse_actions[int(action)],
                                                                     key,
                                                                     door, 
                                                                     door_status_infront=check_door(new_agent_dir, new_agent_pos),
                                                                     key_status=check_key(new_agent_dir, new_agent_pos, key_pos))
-            print("door status: ", door)
             cost, done = step(env, int(action))
-        
+            # plot_env(env)
+        # print('Optimal path:', optimal_path)
+        # visualize_policy(env_path, optimal_path, sleep=1)
+        # import pdb; pdb.set_trace()
         if fail == False:
             # visualize_policy(env_path, optimal_path, sleep=1)
             draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partB", f"{unknown_envs[:-4]}.gif"))

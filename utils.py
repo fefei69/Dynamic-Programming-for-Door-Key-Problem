@@ -172,7 +172,7 @@ def visualize_policy(env_path, policy, sleep=0.5):
     env, info = load_env(env_path)
     for action in policy:
         cost, _ = step(env, action)
-        print("Action: {}, Total Cost: {}".format(action, cost))
+        # print("Action: {}, Total Cost: {}".format(action, cost))
         # print(env.render().shape)
         cv2.imshow("Env", cv2.resize(env.render(), (192*2, 192*2)))
         time.sleep(sleep) 

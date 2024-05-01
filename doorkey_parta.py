@@ -31,7 +31,7 @@ available_cells = get_available_cells(env)
 available_cells.append((goal_node[0],goal_node[1]))
 available_cells.append((key_node[0],key_node[1]))
 available_cells.append((door_node[0],door_node[1]))
-
+# available_cells.remove((4,2))
 
 headings = {
     'L': (-1, 0),
