@@ -245,7 +245,6 @@ def main():
                                             
         if np.all(VALUE_T == VALUE_T1):
             print("Value function equals")
-            import pdb; pdb.set_trace()
             return POLICY, VALUE_T
         VALUE_T1 = VALUE_T.copy()
     return POLICY, VALUE_T
@@ -257,7 +256,6 @@ if __name__ == "__main__":
     # TODO: Find the policy for specific goal state and door status at start node 
     # Run the policy for 36 random environments
     for i in range(1, 36):
-        fail = False
         new_agent_pos = start_node
         new_agent_dir = (start_dir[0], start_dir[1])
         unknown_envs = f"DoorKey-8x8-{i}.env"
@@ -291,9 +289,8 @@ if __name__ == "__main__":
             print("door status: ", door)
             cost, done = step(env, int(action))
         
-        if fail == False:
-            # visualize_policy(env_path, optimal_path, sleep=1)
-            draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partB", f"{unknown_envs[:-4]}.gif"))
+        visualize_policy(env_path, optimal_path, sleep=0.001,write_frames=True)
+        # draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partB", f"{unknown_envs[:-4]}.gif"))
 
    
     

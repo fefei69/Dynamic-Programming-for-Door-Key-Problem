@@ -166,14 +166,17 @@ def draw_gif_from_seq(seq, env_path, path="./gif/doorkey.gif"):
     print(f"GIF is written to {path}")
     return None
 
-def visualize_policy(env_path, policy, sleep=0.5):
+def visualize_policy(env_path, policy, sleep=0.5, write_frames=False):
     import cv2
     import time
     env, info = load_env(env_path)
-    for action in policy:
+    for i, action in enumerate(policy):
+        if write_frames==True:
+            imageio.imwrite(f"starter_code/results/partB_frames/{env_path[-17:-4]}frame{i}.png", env.render())
         cost, _ = step(env, action)
         # print("Action: {}, Total Cost: {}".format(action, cost))
-        # print(env.render().shape)
+        if write_frames== True and i == len(policy)-1:
+            imageio.imwrite(f"starter_code/results/partB_frames/{env_path[-17:-4]}frame_last.png", env.render())
         cv2.imshow("Env", cv2.resize(env.render(), (192*2, 192*2)))
         time.sleep(sleep) 
         if cv2.waitKey(1) & 0xFF == ord('q'): 
