@@ -3,7 +3,7 @@
 ## Overview
 In this assignment, you are required to implement dynammic programming for the Door-Key problems.
 <p align="center">
-<img src="results/partA/doorkey-5x5-normal.gif" alt="Door-key Problem" width="500"/></br>
+<img src="results/partA/doorkey-5x5-normal.gif" alt="Door-key Problem" width="200"/></br>
 </p>
 
 There are 7 test scenes you have to test and include in the report.
