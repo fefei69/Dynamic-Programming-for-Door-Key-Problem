@@ -14,11 +14,11 @@ There are 7 test scenes you have to test and include in the report.
 
 |           doorkey-6x6-normal            |            doorkey-6x6-direct            |            doorkey-6x6-shortcut            |
 | :-------------------------------------: | :--------------------------------------: | :----------------------------------------: |
-| <img src="envs/known_envs/doorkey-6x6-normal.png"> | <img src="results/partA/doorkey-5x5-normal.gif" > | <img src="results/partA/doorkey-5x5-normal.gif" > |
+| <img src="results/partA/doorkey-6x6-normal.gif"> | <img src="results/partA/doorkey-6x6-direct.gif" > | <img src="results/partA/doorkey-6x6-shortcut.gif" > |
 
 |           doorkey-8x8-normal            |            doorkey-8x8-direct            |            doorkey-8x8-shortcut            |
 | :-------------------------------------: | :--------------------------------------: | :----------------------------------------: |
-| <img src="envs/known_envs/doorkey-8x8-normal.png"> | <img src="envs/known_envs/doorkey-8x8-direct.png" > | <img src="envs/known_envs/doorkey-8x8-shortcut.png" > |
+| <img src="results/partA/doorkey-8x8-normal.gif"> | <img src="results/partA/doorkey-8x8-direct.gif" > | <img src="results/partA/doorkey-8x8-shortcut.gif" > |
 
 ## Installation
 
