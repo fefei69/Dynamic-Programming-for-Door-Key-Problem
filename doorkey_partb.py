@@ -186,7 +186,7 @@ def motion_model(agent_dir, agent_pos, a, key, door, door_status_infront=None, k
         
     return new_agent_pos, new_agent_dir, key, door
 
-# 36864 states
+# 18431 states
 '''
 states: pos_x, pos_y, headings id (0 ~ 3), goal position index (0 ~ 2) , key position index (0 ~ 2), door status of two doors (0 ~ 3), key_status (0 or 1)
 '''
@@ -289,7 +289,7 @@ if __name__ == "__main__":
             print("door status: ", door)
             cost, done = step(env, int(action))
         
-        visualize_policy(env_path, optimal_path, sleep=0.001,write_frames=True)
+        visualize_policy(env_path, optimal_path, sleep=0.001, write_frames=False)
         # draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partB", f"{unknown_envs[:-4]}.gif"))
 
    
