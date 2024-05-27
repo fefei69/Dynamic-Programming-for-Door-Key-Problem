@@ -1,5 +1,4 @@
 from utils import *
-from tqdm import tqdm
 
 MF = 0  # Move Forward
 TL = 1  # Turn Left
@@ -119,7 +118,7 @@ def motion_model(agent_dir, agent_pos, a, key, door, key_status=False, door_stat
 states: (pos_x, pos_y, headings id (0~4), door status (0 or 1), key_status (0 or 1)
 '''
 def path_finding(goal_node, door_node, available_cells):
-    for _ in tqdm(range(horizon)):
+    for _ in range(horizon):
         OLDVALUE = VALUE.copy()
         VALUE[goal_node[0], goal_node[1], :,:,:] = 0
         for i in range(height):
@@ -168,7 +167,7 @@ if __name__ == "__main__":
               "doorkey-8x8-direct.env"]
 
     for i in range(len(known_envs)):
-        env_path = os.path.join("starter_code/envs/known_envs/", known_envs[i])
+        env_path = os.path.join("envs/known_envs/", known_envs[i])
         env, info = load_env(env_path)
         height, width = info['height'], info['width']
         start_node = info['init_agent_pos']
@@ -216,4 +215,4 @@ if __name__ == "__main__":
         print('Optimal policy:', optimal_policy)
         print("Environment:", known_envs[i])
         visualize_policy(env_path, optimal_path, sleep=0.01, write_frames=False)
-        draw_gif_from_seq(optimal_path, env_path, path=os.path.join("starter_code/results/partA", f"{known_envs[i][:-4]}.gif"))
+        # draw_gif_from_seq(optimal_path, env_path, path=os.path.join("results/partA", f"{known_envs[i][:-4]}.gif"))

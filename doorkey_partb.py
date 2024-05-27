@@ -259,7 +259,7 @@ if __name__ == "__main__":
         new_agent_pos = start_node
         new_agent_dir = (start_dir[0], start_dir[1])
         unknown_envs = f"DoorKey-8x8-{i}.env"
-        env_path = os.path.join("starter_code/envs/random_envs/", unknown_envs)
+        env_path = os.path.join("envs/random_envs/", unknown_envs)
         env, info = load_env(env_path)
         # plot_env(env)
         door1, door2 = env.get_wrapper_attr('grid').get(4, 2), env.get_wrapper_attr('grid').get(4, 5)
