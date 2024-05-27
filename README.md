@@ -30,6 +30,6 @@ python doorkey_parta.py
 python doorkey_partb.py
 ```
 
-[Report of the project](https://drive.google.com/file/d/1gGTy6aJvMT_aJA7Lo34wo0f0j_Yyy1Jp/view?usp=drive_link)
+[Report of the project](https://drive.google.com/file/d/1gGTy6aJvMT_aJA7Lo34wo0f0j_Yyy1Jp/view?usp=sharing)
 
 
