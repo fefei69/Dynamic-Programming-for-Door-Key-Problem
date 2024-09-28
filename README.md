@@ -1,4 +1,4 @@
-# ECE276B SP24 Project 1
+# Door Key problem using Dynamic Programming
 
 ## Overview
 This project focuses on autonomous navigation in a
