@@ -2,3 +2,5 @@ HW1.py
 test.py
 *.pdf
 test/
+.DS_Store
+__pycache__/
